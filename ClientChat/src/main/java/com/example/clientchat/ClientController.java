@@ -39,18 +39,18 @@ public class ClientController {
             messageTextArea.appendText(messageField.getText().trim());
             messageTextArea.appendText(System.lineSeparator());
             messageTextArea.appendText(System.lineSeparator());
-            requestFocus();
+            messageField.requestFocus();
             messageField.clear();
         }
     }
 
-    private void requestFocus() {
+    /*private void requestFocus() {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
                 messageField.requestFocus();
             }
         });
-    }
+    }*/
 
 }
