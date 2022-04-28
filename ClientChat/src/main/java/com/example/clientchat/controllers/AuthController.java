@@ -59,6 +59,9 @@ public class AuthController {
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
+                            String[] parts = message.split(" ");
+                            String userName = parts[1];
+                            clientChat.getChatStage().setTitle(userName);
                             clientChat.getAuthStage().close();
                         }
                     });

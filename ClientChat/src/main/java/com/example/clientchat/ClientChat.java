@@ -17,29 +17,21 @@ import java.io.IOException;
 
 public class ClientChat extends Application {
 
-    private Stage stage;
+    private Stage chatStage;
     private Stage authStage;
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        this.stage = primaryStage;
+        this.chatStage = primaryStage;
 
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(ClientChat.class.getResource("chat-template.fxml"));
-
-        Parent root = fxmlLoader.load();
-
-        Scene scene = new Scene(root);
-        this.stage.setTitle("Java FX Application");
-        this.stage.setScene(scene);
-
-        ClientController controller = fxmlLoader.getController();
-        controller.userList.getItems().addAll("user1", "user2");
-
-        primaryStage.show();
-
+        ClientController controller = createChatDialog(primaryStage);
         connectToServer(controller);
+        createAuthDialog(primaryStage);
 
+        controller.initializeMessageHandler();
+    }
+
+    private void createAuthDialog(Stage primaryStage) throws IOException {
         FXMLLoader authLoader = new FXMLLoader();
         authLoader.setLocation(ClientChat.class.getResource("authDialog.fxml"));
         AnchorPane authDialogPanel = authLoader.load();
@@ -55,7 +47,24 @@ public class ClientChat extends Application {
         authController.initializeMessageHandler();
 
         authStage.showAndWait();
-        controller.initializeMessageHandler();
+    }
+
+    private ClientController createChatDialog(Stage primaryStage) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(ClientChat.class.getResource("chat-template.fxml"));
+
+        Parent root = fxmlLoader.load();
+
+        Scene scene = new Scene(root);
+        this.chatStage.setTitle("Java FX Application");
+        this.chatStage.setScene(scene);
+
+        ClientController controller = fxmlLoader.getController();
+        controller.userList.getItems().addAll("user1", "user2");
+
+        primaryStage.show();
+
+        return controller;
     }
 
     private void connectToServer(ClientController clientController) {
@@ -69,7 +78,7 @@ public class ClientChat extends Application {
 
         clientController.setApplication(this);
 
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+        chatStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent windowEvent) {
                 Network.getInstance().close();
@@ -90,5 +99,9 @@ public class ClientChat extends Application {
 
     public Stage getAuthStage() {
         return authStage;
+    }
+
+    public Stage getChatStage() {
+        return chatStage;
     }
 }
