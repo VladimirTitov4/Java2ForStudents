@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 public class Network {
 
+    private static Network INSTANCE;
     public static final String SERVER_HOST = "127.0.0.1";
     public static final int SERVER_PORT = 8189;
 
@@ -18,13 +19,21 @@ public class Network {
     private DataInputStream socketInput;
     private DataOutputStream socketOutput;
 
-    public Network(String host, int port) {
+    private Network(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
-    public Network() {
+    private Network() {
         this(SERVER_HOST, SERVER_PORT);
+    }
+
+    public static Network getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new Network();
+        }
+
+        return INSTANCE;
     }
 
     public boolean connect() {
@@ -55,6 +64,9 @@ public class Network {
             public void run() {
                 while (true) {
                     try {
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
                         String message = socketInput.readUTF();
                         messageHandler.accept(message);
                     } catch (IOException e) {

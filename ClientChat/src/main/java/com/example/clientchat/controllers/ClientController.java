@@ -1,5 +1,7 @@
-package com.example.clientchat;
+package com.example.clientchat.controllers;
 
+import com.example.clientchat.ClientChat;
+import com.example.clientchat.Network;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -25,7 +27,6 @@ public class ClientController {
     @FXML
     public ListView userList;
 
-    private Network network;
     private ClientChat application;
 
     public void sendMessage() {
@@ -34,7 +35,7 @@ public class ClientController {
         messageTextArea.requestFocus();
         appendMessageToChat(message);
         try {
-            network.sendMessage(message);
+            Network.getInstance().sendMessage(message);
         } catch (IOException e) {
             application.showErrorDialog("Ошибка передачи данных по сети");
         }
@@ -48,13 +49,8 @@ public class ClientController {
         }
     }
 
-    public Network getNetwork() {
-        return network;
-    }
-
-    public void setNetwork(Network network) {
-        this.network = network;
-        network.waitMessages(new Consumer<String>() {
+    public void initializeMessageHandler() {
+        Network.getInstance().waitMessages(new Consumer<String>() {
             @Override
             public void accept(String message) {
                 appendMessageToChat(message);
