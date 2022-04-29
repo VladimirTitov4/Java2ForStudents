@@ -3,8 +3,6 @@ package com.geekbrains.lesson6.homework;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -26,8 +24,8 @@ public class Server {
             inputStream = new DataInputStream(clientSocket.getInputStream());
             outputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-            runInputLoop(inputStream);
-            runOutputLoop(outputStream);
+            readMessages();
+            sendMessages();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -36,12 +34,12 @@ public class Server {
         }
     }
 
-    private void runInputLoop(DataInputStream inputStream) {
+    private void readMessages() {
         new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     String message = inputStream.readUTF();
-                    if (message.startsWith("/end")) {
+                    if (message.toLowerCase().startsWith("/end")) {
                         System.out.println("Клиент отключился");
                         System.exit(0);
                     }
@@ -55,7 +53,7 @@ public class Server {
         }).start();
     }
 
-    private void runOutputLoop(DataOutputStream outputStream) throws IOException {
+    private void sendMessages() throws IOException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String message = scanner.nextLine();

@@ -16,13 +16,13 @@ public class Client {
     }
 
     public void start(String host, int port) throws IOException {
-        try(Socket socket = new Socket(host, port);) {
+        try (Socket socket = new Socket(host, port);) {
             System.out.println("Клиент запущен");
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
 
-            runInputLoop(inputStream);
-            runOutputLoop(outputStream);
+            readMessages();
+            sendMessages();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -31,12 +31,12 @@ public class Client {
         }
     }
 
-    private void runInputLoop(DataInputStream inputStream) {
+    private void readMessages() {
         new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     String message = inputStream.readUTF();
-                    if (message.startsWith("/end")) {
+                    if (message.toLowerCase().startsWith("/end")) {
                         System.out.println("Сервер завершил свою работу");
                         System.exit(0);
                     }
@@ -51,7 +51,7 @@ public class Client {
         }).start();
     }
 
-    private void runOutputLoop(DataOutputStream outputStream) throws IOException {
+    private void sendMessages() throws IOException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String message = scanner.nextLine();
