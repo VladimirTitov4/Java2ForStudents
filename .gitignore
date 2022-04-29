@@ -56,7 +56,7 @@ cmake-build-*/
 out/
 
 ClientChat/ClientChat.iml
-
+Server/Server.iml
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
