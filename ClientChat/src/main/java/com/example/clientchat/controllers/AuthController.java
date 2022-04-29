@@ -1,7 +1,12 @@
 package com.example.clientchat.controllers;
 
 import com.example.clientchat.ClientChat;
-import com.example.clientchat.Network;
+import com.example.clientchat.dialogs.Dialogs;
+import com.example.clientchat.model.Network;
+import com.example.clientchat.model.ReadMessageListener;
+import com.example.command.Command;
+import com.example.command.CommandType;
+import com.example.command.commands.commands.AuthOkCommandData;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -9,12 +14,8 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 public class AuthController {
-
-    public static final String AUTH_COMMAND = "/auth";
-    public static final String AUTH_OK_COMMAND = "/authOk";
 
     @FXML
     public TextField loginField;
@@ -23,7 +24,7 @@ public class AuthController {
     @FXML
     public Button authButton;
 
-    private ClientChat clientChat;
+    public ReadMessageListener readMessageListener;
 
     @FXML
     public void executeAuth() {
@@ -31,49 +32,51 @@ public class AuthController {
         String password = passwordField.getText();
 
         if (login == null || password == null || login.isBlank() || login.isBlank()) {
-            clientChat.showErrorDialog("Логин и пароль должны быть указаны");
+            Dialogs.AuthError.EMPTY_CREDENTIALS.show();
             return;
         }
 
-        String authCommandMessage = String.format("%s %s %s", AUTH_COMMAND, login, password);
-
-        try {
-            Network.getInstance().sendMessage(authCommandMessage);
-        } catch (IOException e) {
-            clientChat.showErrorDialog("Ошибка передачи данных по сети");
-            e.printStackTrace();
+        if (!isConnectedToServer()) {
+            Dialogs.NetworkError.SERVER_CONNECT.show();
         }
 
-    }
-
-    public void setClientChat(ClientChat clientChat) {
-        this.clientChat = clientChat;
+        try {
+            Network.getInstance().sendAuthMessage(login, password);
+        } catch (IOException e) {
+            Dialogs.NetworkError.SEND_MESSAGE.show();
+            e.printStackTrace();
+        }
     }
 
     public void initializeMessageHandler() {
-        Network.getInstance().waitMessages(new Consumer<String>() {
+        readMessageListener = getNetwork().addReadMessageListener(new ReadMessageListener() {
             @Override
-            public void accept(String message) {
-                if (message.startsWith(AUTH_OK_COMMAND)) {
-                    Thread.currentThread().interrupt();
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            String[] parts = message.split(" ");
-                            String userName = parts[1];
-                            clientChat.getChatStage().setTitle(userName);
-                            clientChat.getAuthStage().close();
-                        }
+            public void processReceivedCommand(Command command) {
+                if (command.getType() == CommandType.AUTH_OK) {
+                    AuthOkCommandData data = (AuthOkCommandData) command.getData();
+                    String userName = data.getUserName();
+                    Platform.runLater(() -> {
+                        ClientChat.getInstance().switchToMainChatWindow(userName);
                     });
                 } else {
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            clientChat.showErrorDialog("Пользователя с таким логином и паролем не существует");
-                        }
+                    Platform.runLater(() -> {
+                        Dialogs.AuthError.INVALID_CREDENTIALS.show();
                     });
                 }
             }
         });
+    }
+
+    public boolean isConnectedToServer() {
+        Network network = getNetwork();
+        return network.isConnected() || network.connect();
+    }
+
+    private Network getNetwork() {
+        return Network.getInstance();
+    }
+
+    public void close() {
+        getNetwork().removeReadMessageListener(readMessageListener);
     }
 }

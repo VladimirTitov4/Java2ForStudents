@@ -1,12 +1,15 @@
 package com.example.server.chat;
 
+import com.example.command.Command;
 import com.example.server.chat.auth.AuthService;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MyServer {
 
@@ -34,20 +37,51 @@ public class MyServer {
         clientHandler.handle();
     }
 
-    public void broadcastMessage(String message, ClientHandler sender) throws IOException {
+    public synchronized void broadcastMessage(String message, ClientHandler sender) throws IOException {
         for (ClientHandler client : clients) {
             if (client != sender) {
-                client.sendMessage(message);
+                client.sendCommand(Command.clientMessageCommand(sender.getUserName(), message));
             }
         }
     }
 
-    public void subscribe(ClientHandler clientHandler) {
-        clients.add(clientHandler);
+    public synchronized void sendPrivateMessage(ClientHandler sender, String recipient, String privateMessage) throws IOException {
+        for (ClientHandler client : clients) {
+            if (client != sender && client.getUserName().equals(recipient)) {
+                client.sendCommand(Command.clientMessageCommand(sender.getUserName(), privateMessage));
+            }
+        }
     }
 
-    public void unsubscribe(ClientHandler clientHandler) {
+    private void notifyUserListUpdated() throws IOException {
+        List<String> users = new ArrayList<>();
+        for (ClientHandler client : clients) {
+            users.add(client.getUserName());
+        }
+
+        for (ClientHandler client : clients) {
+            client.sendCommand(Command.updateUserListCommand(users));
+        }
+    }
+
+    public synchronized boolean isUserNameBusy(String userName) {
+        for (ClientHandler client : clients) {
+            if (client.getUserName().equals(userName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public synchronized void subscribe(ClientHandler clientHandler) throws IOException {
+        clients.add(clientHandler);
+        notifyUserListUpdated();
+    }
+
+    public synchronized void unsubscribe(ClientHandler clientHandler) throws IOException {
         clients.remove(clientHandler);
+        notifyUserListUpdated();
     }
 
     public AuthService getAuthService() {
