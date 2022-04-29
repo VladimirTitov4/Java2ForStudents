@@ -8,44 +8,39 @@ import java.util.Scanner;
 
 public class Client {
 
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
+
     public static void main(String[] args) throws IOException {
-        new Client().start("localhost", 8150);
+        new Client().start(Network.HOST, Network.PORT);
     }
 
     public void start(String host, int port) throws IOException {
-        Socket socket = null;
-        Thread inputThread = null;
-
-        try {
-            socket = new Socket(host, port);
+        try(Socket socket = new Socket(host, port);) {
             System.out.println("Клиент запущен");
-            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            inputStream = new DataInputStream(socket.getInputStream());
+            outputStream = new DataOutputStream(socket.getOutputStream());
 
-            inputThread = runInputLoop(inputStream);
+            runInputLoop(inputStream);
             runOutputLoop(outputStream);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (inputThread != null) {
-                inputThread.interrupt();
-            }
-            if (socket != null) {
-                socket.close();
-            }
+            outputStream.close();
+            inputStream.close();
         }
-
     }
 
-    private Thread runInputLoop(DataInputStream inputStream) {
-        Thread thread = new Thread(() -> {
+    private void runInputLoop(DataInputStream inputStream) {
+        new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     String message = inputStream.readUTF();
-                    System.out.println("From server: " + message);
                     if (message.startsWith("/end")) {
+                        System.out.println("Сервер завершил свою работу");
                         System.exit(0);
                     }
+                    System.out.println("From server: " + message);
                 } catch (IOException e) {
                     System.out.println("подключение прервано");
                     System.exit(0);
@@ -53,19 +48,17 @@ public class Client {
                 }
             }
 
-        });
-        thread.start();
-        return thread;
+        }).start();
     }
 
     private void runOutputLoop(DataOutputStream outputStream) throws IOException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String message = scanner.nextLine();
+            outputStream.writeUTF(message);
             if (message.startsWith("/end")) {
                 break;
             }
-            outputStream.writeUTF(message);
         }
     }
 }

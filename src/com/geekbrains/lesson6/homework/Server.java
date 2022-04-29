@@ -3,76 +3,66 @@ package com.geekbrains.lesson6.homework;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Server {
 
-    private static final int PORT = 8150;
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
 
     public static void main(String[] args) throws IOException {
-        new Server().start(PORT);
+        new Server().start(Network.PORT);
     }
 
     public void start(int port) throws IOException {
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
-        Thread inputThread = null;
-        try {
-            serverSocket = new ServerSocket(port);
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Сервер запущен");
-            clientSocket = serverSocket.accept();
+            Socket clientSocket = serverSocket.accept();
             System.out.println("Клиент подключился");
-            DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
-            DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
+            inputStream = new DataInputStream(clientSocket.getInputStream());
+            outputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-            inputThread = runInputLoop(inputStream);
+            runInputLoop(inputStream);
             runOutputLoop(outputStream);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (inputThread != null) {
-                inputThread.interrupt();
-            }
-            if (clientSocket != null) {
-                clientSocket.close();
-            }
-            if (serverSocket != null) {
-                serverSocket.close();
-            }
+            outputStream.close();
+            inputStream.close();
         }
     }
 
-    private Thread runInputLoop(DataInputStream inputStream) {
-        Thread thread = new Thread(() -> {
+    private void runInputLoop(DataInputStream inputStream) {
+        new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     String message = inputStream.readUTF();
-                    System.out.println("From client: " + message);
                     if (message.startsWith("/end")) {
+                        System.out.println("Клиент отключился");
                         System.exit(0);
                     }
+                    System.out.println("From client: " + message);
                 } catch (IOException e) {
                     System.out.println("подключение прервано");
                     System.exit(0);
                     break;
                 }
             }
-
-        });
-        thread.start();
-        return thread;
+        }).start();
     }
 
     private void runOutputLoop(DataOutputStream outputStream) throws IOException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String message = scanner.nextLine();
+            outputStream.writeUTF(message);
             if (message.startsWith("/end")) {
                 break;
             }
-            outputStream.writeUTF(message);
         }
     }
 }
