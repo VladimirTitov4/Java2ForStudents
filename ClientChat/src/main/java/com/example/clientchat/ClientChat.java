@@ -6,7 +6,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -45,6 +44,7 @@ public class ClientChat extends Application {
 
         Parent root = chatWindowLoader.load();
         chatStage.setScene(new Scene(root));
+        getChatController().initializeMessageHandler();
     }
 
     private void initAuthDialog() throws IOException {
@@ -62,11 +62,10 @@ public class ClientChat extends Application {
         getChatStage().setTitle(userName);
         getAuthController().close();
         getAuthStage().close();
-        getChatController().initializeMessageHandler();
     }
 
     @Override
-    public void init() throws Exception {
+    public void init() {
         INSTANCE = this;
     }
 

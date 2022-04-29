@@ -18,7 +18,6 @@ public class ClientHandler {
     private final Socket clientSocket;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
-
     private String userName;
 
     public ClientHandler(MyServer server, Socket clientSocket) {
