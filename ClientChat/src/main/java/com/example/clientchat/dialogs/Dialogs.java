@@ -19,7 +19,7 @@ public class Dialogs {
         }
 
         public void show() {
-            showDialog(Alert.AlertType.ERROR, TITLE, TITLE, message);
+            showDialog(Alert.AlertType.ERROR, TITLE, TYPE, message);
         }
     }
 

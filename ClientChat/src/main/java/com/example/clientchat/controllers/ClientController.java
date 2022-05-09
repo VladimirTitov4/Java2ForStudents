@@ -59,6 +59,8 @@ public class ClientController {
         }
 
         appendMessageToChat("Я", message);
+        requestFocusForTextArea();
+        messageTextArea.clear();
     }
 
     public void appendMessageToChat(String sender, String message) {
@@ -73,8 +75,7 @@ public class ClientController {
         chatTextArea.appendText(message);
         chatTextArea.appendText(System.lineSeparator());
         chatTextArea.appendText(System.lineSeparator());
-        requestFocusForTextArea();
-        messageTextArea.clear();
+        
     }
 
     private void requestFocusForTextArea() {
