@@ -15,7 +15,8 @@ public class AuthTimeout extends TimerTask {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }        Platform.runLater(() -> {
+        }
+        Platform.runLater(() -> {
             if (!Network.getInstance().isConnected()) {
                 Dialogs.AuthTimeout.AUTH_TIMEOUT.show();
                 ClientChat.getInstance().getAuthStage().close();

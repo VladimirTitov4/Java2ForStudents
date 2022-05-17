@@ -32,7 +32,6 @@ public class ClientChat extends Application {
         this.chatStage = primaryStage;
 
         initViews();
-        getChatStage().show();
         getAuthStage().show();
         getAuthController().initializeMessageHandler();
     }
@@ -72,6 +71,7 @@ public class ClientChat extends Application {
         getChatStage().setTitle(userName);
         getAuthController().close();
         getAuthStage().close();
+        getChatStage().show();
     }
 
     @Override
