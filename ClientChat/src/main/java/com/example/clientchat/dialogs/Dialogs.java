@@ -23,6 +23,23 @@ public class Dialogs {
         }
     }
 
+    public enum AuthTimeout{
+        AUTH_TIMEOUT("Время на авторизацию в чате истекло. Повторите вход");
+
+        private static final String TITLE = "Время на авторизацию истекло";
+        private static final String TYPE = TITLE;
+
+        private final String message;
+
+        AuthTimeout(String message) {
+            this.message = message;
+        }
+
+        public void show(){
+            showDialog(Alert.AlertType.WARNING, TITLE, TITLE, message);
+        }
+    }
+
     public enum NetworkError {
         SEND_MESSAGE("Не удалось отправить сообщение!"),
         SERVER_CONNECT("Не удалось установить соединение с сервером!");
